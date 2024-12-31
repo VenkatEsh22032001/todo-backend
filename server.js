@@ -11,7 +11,7 @@ app.use(cors())
 // let todos = []
 
 // connecting mongodb
-mongoose.connect('mongodb://localhost:27017/todo-app')
+mongoose.connect('mongodb+srv://test:test@cluster0.sqigu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
 .then(()=>{
     console.log('DB connected!')
 })
