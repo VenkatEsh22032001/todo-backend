@@ -1,114 +1,93 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-app.use(cors({ origin: 'http://3.81.228.191:3000' }));
+require('dotenv').config();
+
 const app = express();
 
+// Middleware
+app.use(cors({ origin: 'http://3.81.228.191:3000' }));
 app.use(express.json());
-app.use(cors())
 
-cors
-
-//create a new todo item
-// let todos = []
-
-// connecting mongodb
-mongoose.connect('mongodb+srv://test:test@cluster0.sqigu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
-.then(()=>{
-    console.log('DB connected!')
+// Connect to MongoDB
+mongoose.connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false,
+    useCreateIndex: true,
 })
-.catch((err)=>{
-    console.log(err)
-})
+    .then(() => console.log('DB connected!'))
+    .catch(err => console.log(err));
 
-//creating schema -using this only mongoose insert data in collections
+// Create Mongoose Schema and Model
 const todoSchema = new mongoose.Schema({
-    title: {
-        required: true,
-        type:String 
-    },
-    description: String
-})
+    title: { required: true, type: String },
+    description: String,
+});
 
-//creating model
 const todoModel = mongoose.model('Todo', todoSchema);
 
-
-app.post('/todos', async(req, res)=>{
-    const{title, description} = req.body;
-    // const newTodo = {
-    //     id: todos.length + 1,
-    //     title, 
-    //     description
-    // }
-    // todos.push(newTodo);
-    // console.log(todos);
-    try{
-        const newTodo = new todoModel({title, description});
+// Create a new Todo
+app.post('/todos', async (req, res) => {
+    const { title, description } = req.body;
+    if (!title || typeof title !== 'string') {
+        return res.status(400).json({ message: 'Title is required and must be a string' });
+    }
+    try {
+        const newTodo = new todoModel({ title, description });
         await newTodo.save();
         res.status(201).json(newTodo);
-    }catch(err){
-        console.log(err)
-        res.status(500).json({message: err.message});
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: err.message });
     }
-})
+});
 
-
-//Get all items
-app.get('/todos',async (req, res)=>{
-    try{
-        const todos = await todoModel.find()
-        res.json(todos)
-    }catch(err){
-        console.log(err)
-        res.status(500).json({message: err.message});
+// Get all Todos
+app.get('/todos', async (req, res) => {
+    try {
+        const todos = await todoModel.find();
+        res.json(todos);
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: err.message });
     }
-   
-})
+});
 
-//update a todo item
-app.put("/todos/:id", async (req, res)=>{
-    try{
-        const {title, description} = req.body;
+// Update a Todo
+app.put('/todos/:id', async (req, res) => {
+    try {
+        const { title, description } = req.body;
         const id = req.params.id;
         const updatedTodo = await todoModel.findByIdAndUpdate(
-            id, 
-            { title, description }, 
-            { new: true}
-        )
-
-        if(!updatedTodo){
-            return res.status(404).json({message: "Todo not found"})
+            id,
+            { title, description },
+            { new: true }
+        );
+        if (!updatedTodo) {
+            return res.status(404).json({ message: 'Todo not found' });
         }
-        res.json(updatedTodo)
-
-    }catch(err){
+        res.json(updatedTodo);
+    } catch (err) {
         console.log(err);
-        res.status(500).json({message: err.message})
+        res.status(500).json({ message: err.message });
     }
-    
-})
+});
 
-
-// Delete a todo item
-
-app.delete('/todos/:id', async (req, res)=>{
+// Delete a Todo
+app.delete('/todos/:id', async (req, res) => {
     try {
         const id = req.params.id;
         await todoModel.findByIdAndDelete(id);
         res.status(204).end();
     } catch (error) {
-        console.log(err);
-        res.status(500).json({message: err.message}) 
+        console.log(error);
+        res.status(500).json({ message: error.message });
     }
-    
-})
+});
 
-
-
-//Start the server
+// Start the Server
 const port = 5000;
-app.listen(port, ()=>{
-    console.log('Server is listening to port '+port);
-})
-
+app.listen(port, () => {
+    console.log('Server is listening to port ' + port);
+});
