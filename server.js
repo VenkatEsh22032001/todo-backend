@@ -1,11 +1,13 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-
+app.use(cors({ origin: 'http://3.81.228.191:3000' }));
 const app = express();
 
 app.use(express.json());
 app.use(cors())
+
+cors
 
 //create a new todo item
 // let todos = []
